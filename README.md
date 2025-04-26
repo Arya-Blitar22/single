@@ -10,6 +10,10 @@ Langsung Install Ajah !!
 
 GRATIS KOK....
 
+### Info
+
+SETELAH TERINSTALL GANTI DOMAIN SAMPEAN SENDIRI DI ANGKA 7 LALU CEK STATUS RUNINGNYA
+
 ## Wajib Domain Sendiri
 
 ````
