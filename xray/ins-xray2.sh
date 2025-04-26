@@ -10,10 +10,6 @@ CYAN='\033[0;36m'
 LIGHT='\033[0;37m'
 # Getting
 MYIP=$(wget -qO- icanhazip.com);
-
-clear
-clear
-
 MYIP=$(wget -qO- ipinfo.io/ip);
 clear
 domain=$(cat /etc/xray/domain)
@@ -74,144 +70,202 @@ path_crt="/etc/xray/xray.crt"
 path_key="/etc/xray/xray.key"
 
 # Buat Config Xray
-cat <<EOF> /etc/xray/config.json
+cat > /etc/xray/config.json << END
 {
-  "log" : {
+  "log": {
     "access": "/var/log/xray/access.log",
     "error": "/var/log/xray/error.log",
-    "loglevel": "warning"
+    "loglevel": "info"
   },
   "inbounds": [
-      {
-      "listen": "127.0.0.1",
-      "port": 10085,
-      "protocol": "dokodemo-door",
+    {
+      "port": 8443,
+      "protocol": "vmess",
       "settings": {
-        "address": "127.0.0.1"
+        "clients": [
+          {
+            "id": "${uuid1}",
+            "alterId": 0
+#xray-vmess-tls
+          }
+        ]
       },
-      "tag": "api"
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "tlsSettings": {
+          "certificates": [
+            {
+              "certificateFile": "${path_crt}",
+              "keyFile": "${path_key}"
+            }
+          ]
+        },
+        "tcpSettings": {},
+        "kcpSettings": {},
+        "httpSettings": {},
+        "wsSettings": {
+          "path": "/NbcGroup",
+          "headers": {
+            "Host": ""
+          }
+        },
+        "quicSettings": {}
+      }
     },
-   {
-     "listen": "127.0.0.1",
-     "port": "8443",
-     "protocol": "vless",
+    {
+      "port": 8880,
+      "protocol": "vmess",
       "settings": {
-          "decryption":"none",
-            "clients": [
-               {
-                 "id": "${uuid}"                 
-#vless
-             }
-          ]
-       },
-       "streamSettings":{
-         "network": "ws",
-            "wsSettings": {
-                "path": "/vless"
+        "clients": [
+
+          {
+            "id": "${uuid2}",
+            "alterId": 0
+#xray-vmess-nontls
           }
-        }
-     },
-     {
-     "listen": "127.0.0.1",
-     "port": "8880",
-     "protocol": "vmess",
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "tlsSettings": {},
+        "tcpSettings": {},
+        "kcpSettings": {},
+        "httpSettings": {},
+        "wsSettings": {
+          "path": "/NbcGroup",
+          "headers": {
+            "Host": ""
+          }
+        },
+        "quicSettings": {}
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    },
+    {
+      "port": 8443,
+      "protocol": "vless",
       "settings": {
-            "clients": [
-               {
-                 "id": "${uuid}",
-                 "alterId": 0
-#vmess
-             }
-          ]
-       },
-       "streamSettings":{
-         "network": "ws",
-            "wsSettings": {
-                "path": "/vmess"
+        "clients": [
+          {
+            "id": "${uuid3}"
+#xray-vless-tls
           }
-        }
-     },
-     {
-     "listen": "127.0.0.1",
-      "port": "2083",
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "tlsSettings": {
+          "certificates": [
+            {
+              "certificateFile": "${path_crt}",
+              "keyFile": "${path_key}"
+            }
+          ]
+        },
+        "tcpSettings": {},
+        "kcpSettings": {},
+        "httpSettings": {},
+        "wsSettings": {
+          "path": "/vless",
+          "headers": {
+            "Host": ""
+          }
+        },
+        "quicSettings": {}
+      },
+      "domain": "$domain",
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    },
+    {
+      "port": 8880,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "${uuid4}"
+#xray-vless-nontls
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "tlsSettings": {},
+        "tcpSettings": {},
+        "kcpSettings": {},
+        "httpSettings": {},
+        "wsSettings": {
+          "path": "/vless",
+          "headers": {
+            "Host": ""
+          }
+        },
+        "quicSettings": {}
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    },
+    {
+      "port": 2083,
       "protocol": "trojan",
       "settings": {
-          "decryption":"none",		
-           "clients": [
-              {
-                 "password": "${uuid}"
-#trojanws
-              }
-          ],
-         "udp": true
-       },
-       "streamSettings":{
-           "network": "ws",
-           "wsSettings": {
-               "path": "/trojan-ws"
-            }
-         }
-     },
-    {
-        "listen": "127.0.0.1",
-        "port": "8880",
-        "protocol": "vless",
-        "settings": {
-         "decryption":"none",
-           "clients": [
-             {
-               "id": "${uuid}"
-#vlessgrpc
-             }
-          ]
-       },
-          "streamSettings":{
-             "network": "grpc",
-             "grpcSettings": {
-                "serviceName": "vless-grpc"
-           }
-        }
-     },
-     {
-      "listen": "127.0.0.1",
-      "port": "8443",
-     "protocol": "vmess",
-      "settings": {
-            "clients": [
-               {
-                 "id": "${uuid}",
-                 "alterId": 0
-#vmessgrpc
-             }
-          ]
-       },
-       "streamSettings":{
-         "network": "grpc",
-            "grpcSettings": {
-                "serviceName": "vmess-grpc"
+        "clients": [
+          {
+            "password": "${uuid5}"
+#xray-trojan
           }
-        }
-     },
-     {
-        "listen": "127.0.0.1",
-        "port": "2083",
-        "protocol": "trojan",
-        "settings": {
-          "decryption":"none",
-             "clients": [
-               {
-                 "password": "${uuid}"
-#trojangrpc
-               }
-           ]
+        ],
+        "fallbacks": [
+          {
+            "dest": 80
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "certificates": [
+            {
+              "certificateFile": "${path_crt}",
+              "keyFile": "${path_key}"
+            }
+          ],
+          "alpn": [
+            "http/1.1"
+          ]
         },
-         "streamSettings":{
-         "network": "grpc",
-           "grpcSettings": {
-               "serviceName": "trojan-grpc"
-         }
-      }
-    }	
+        "tcpSettings": {},
+        "kcpSettings": {},
+        "wsSettings": {},
+        "httpSettings": {},
+        "quicSettings": {},
+        "grpcSettings": {}
+      },
+      "domain": "$domain"
+     }
   ],
   "outbounds": [
     {
@@ -278,53 +332,50 @@ cat <<EOF> /etc/xray/config.json
     },
     "system": {
       "statsInboundUplink": true,
-      "statsInboundDownlink": true,
-      "statsOutboundUplink" : true,
-      "statsOutboundDownlink" : true
+      "statsInboundDownlink": true
     }
   }
 }
-EOF
-# Installing Xray Service
-rm -fr /etc/systemd/system/xray.service.d
-rm -fr /etc/systemd/system/xray.service
-cat <<EOF> /etc/systemd/system/xray.service
-Description=Xray Service
-Documentation=https://github.com/xtls
+END
+
+# / / Installation Xray Service
+cat > /etc/systemd/system/xray.service << END
+[Unit]
+Description=Xray Service By ETIL
+Documentation=https://wa.me/6287721815317
 After=network.target nss-lookup.target
+
 [Service]
-User=www-data
-CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE                            
+User=root
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 NoNewPrivileges=true
-ExecStart=/usr/local/bin/xray run -config /etc/xray/config.json
+ExecStart=/usr/local/bin/xray -config /etc/xray/config.json
 Restart=on-failure
 RestartPreventExitStatus=23
-LimitNPROC=10000
-LimitNOFILE=1000000
+
 [Install]
 WantedBy=multi-user.target
-EOF
-echo -e "[ ${GREEN}ok${NC} ] Enable & Start & Restart & Xray"
-systemctl daemon-reload >/dev/null 2>&1
-systemctl enable xray >/dev/null 2>&1
-systemctl start xray >/dev/null 2>&1
-systemctl restart xray >/dev/null 2>&1
-echo -e "[ ${GREEN}ok${NC} ] Enable & Start & Restart & Nginx"
-systemctl daemon-reload >/dev/null 2>&1
-systemctl enable nginx >/dev/null 2>&1
-systemctl start nginx >/dev/null 2>&1
-systemctl restart nginx >/dev/null 2>&1
-# Restart All Service
-echo -e "$yell[SERVICE]$NC Restart All Service"
-sleep 1
-chown -R www-data:www-data /home/vps/public_html
-# Enable & Restart & Xray & Trojan & Nginx
-sleep 1
-echo -e "[ ${GREEN}ok${NC} ] Restart & Xray & Nginx"
-systemctl daemon-reload >/dev/null 2>&1
-systemctl restart xray >/dev/null 2>&1
-systemctl restart nginx >/dev/null 2>&1
+END
+
+
+# // Enable & Start Service
+# Accept port Xray
+iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 8443 -j ACCEPT
+iptables -I INPUT -m state --state NEW -m udp -p udp --dport 8443 -j ACCEPT
+iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 8880 -j ACCEPT
+iptables -I INPUT -m state --state NEW -m udp -p udp --dport 8880 -j ACCEPT
+iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 2083 -j ACCEPT
+iptables -I INPUT -m state --state NEW -m udp -p udp --dport 2083 -j ACCEPT
+iptables-save > /etc/iptables.up.rules
+iptables-restore -t < /etc/iptables.up.rules
+netfilter-persistent save
+netfilter-persistent reload
+systemctl daemon-reload
+systemctl stop xray.service
+systemctl start xray.service
+systemctl enable xray.service
+systemctl restart xray.service
 
 # Install Trojan Go
 latest_version="$(curl -s "https://api.github.com/repos/p4gefau1t/trojan-go/releases" | grep tag_name | sed -E 's/.*"v(.*)".*/\1/' | head -n 1)"
